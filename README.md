@@ -27,7 +27,7 @@ For GKE Autopilot, change `distribution: gke` to
 
 ## 2. Edit the non-secret settings
 
-In `splunk-otel-values.yaml`, replace:
+In a default `splunk-otel-values.yaml`, replace:
 
 - `REPLACE_WITH_GKE_CLUSTER_NAME`
 - `REPLACE_WITH_SPLUNK_REALM` (for example, `us0` or `eu0`)
@@ -35,6 +35,8 @@ In `splunk-otel-values.yaml`, replace:
 ## 3. Create the Splunk token Secret
 
 Set the token only in your shell; do not add it to a values file or Git.
+
+Obtain token from `https://app.<region>.observability.splunkcloud.com/#/tokens`
 
 ```bash
 read -s -p "Splunk Observability access token: " SPLUNK_ACCESS_TOKEN
@@ -72,6 +74,8 @@ kubectl -n otel-demo rollout status deployment/splunk-otel-collector-gateway \
 
 ## 5. Install the Demo
 
+In `otel-demo-values.yml` make changes as required.
+
 ```bash
 helm upgrade --install otel-demo \
   open-telemetry/opentelemetry-demo \
@@ -84,6 +88,43 @@ helm upgrade --install otel-demo \
 If the Demo was already installed without `OTEL_LOGS_EXPORTER=none`, running
 the command above rolls out the corrected environment setting and stops HTTP
 429 retries from the gateway's `otlp_http/entities` exporter.
+
+### Success output
+```bash
+Release "otel-demo" does not exist. Installing it now.
+NAME: otel-demo
+LAST DEPLOYED: Tue Oct 13 10:58:55 2026
+NAMESPACE: otel-demo
+STATUS: deployed
+REVISION: 1
+DESCRIPTION: Install complete
+TEST SUITE: None
+NOTES:
+=======================================================================================
+
+
+ ██████╗ ████████╗███████╗██╗         ██████╗ ███████╗███╗   ███╗ ██████╗
+██╔═══██╗╚══██╔══╝██╔════╝██║         ██╔══██╗██╔════╝████╗ ████║██╔═══██╗
+██║   ██║   ██║   █████╗  ██║         ██║  ██║█████╗  ██╔████╔██║██║   ██║
+██║   ██║   ██║   ██╔══╝  ██║         ██║  ██║██╔══╝  ██║╚██╔╝██║██║   ██║
+╚██████╔╝   ██║   ███████╗███████╗    ██████╔╝███████╗██║ ╚═╝ ██║╚██████╔╝
+ ╚═════╝    ╚═╝   ╚══════╝╚══════╝    ╚═════╝ ╚══════╝╚═╝     ╚═╝ ╚═════╝
+
+
+- All services are available via the Frontend proxy: http://localhost:8080
+  by running these commands:
+     kubectl --namespace otel-demo port-forward svc/frontend-proxy 8080:8080
+
+  The following services are available at these paths after the frontend-proxy service is exposed with port forwarding:
+  Demo UI                    http://localhost:8080/
+  Chat with an agent         http://localhost:8080/chatbot/
+  Telemetry Documentation    http://localhost:8080/telemetry/
+  Jaeger UI                  http://localhost:8080/jaeger/ui/
+  Firepit (Profiles)         http://localhost:8080/profiles/
+  Grafana                    http://localhost:8080/grafana/
+  Feature Flags UI           http://localhost:8080/feature/
+```
+
 
 ## 6. Verify telemetry routing and open the UI
 
