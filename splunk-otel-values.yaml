@@ -1,0 +1,51 @@
+# Splunk OpenTelemetry Collector chart 0.161.0
+# The access token is deliberately not stored in this file.
+distribution: gke
+cloudProvider: gcp
+clusterName: otel-demo
+fullnameOverride: splunk-otel-collector-gateway
+
+splunkObservability:
+  realm: eu0
+  metricsEnabled: true
+  tracesEnabled: true
+
+# Use the Secret created by the installation commands in README.md.
+secret:
+  create: false
+  name: splunk-otel-credentials
+  validateSecret: true
+
+# Retain the DaemonSet and cluster receiver for Kubernetes/node telemetry.
+agent:
+  enabled: true
+
+# Demo applications send OTLP to this stable ClusterIP service.
+gateway:
+  enabled: true
+  tokenPassthrough: false
+  replicaCount: 2
+  # With only Splunk Observability configured, the chart's default logs pipeline
+  # treats all incoming OTLP logs as entity events and sends them to /v3/event.
+  # This deployment is traces-and-metrics only. Keep a valid logs pipeline so
+  # accidental OTLP log requests are accepted, but discard them locally through
+  # the nop exporter. The chart merge logic does not delete defaults set to null.
+  config:
+    exporters:
+      nop: {}
+    service:
+      pipelines:
+        logs/entities:
+          receivers: [otlp]
+          processors: [memory_limiter, batch]
+          exporters: [nop]
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+
+clusterReceiver:
+  enabled: true

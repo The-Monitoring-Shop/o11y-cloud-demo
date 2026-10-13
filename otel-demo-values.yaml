@@ -1,0 +1,53 @@
+# OpenTelemetry Demo chart 0.42.0
+# Send all SDK telemetry to the Splunk Collector gateway and do not install
+# the Demo chart's bundled Collector or local observability backends.
+default:
+  envOverrides:
+    - name: OTEL_COLLECTOR_NAME
+      value: splunk-otel-collector-gateway
+    # Splunk Observability Cloud does not use the gateway's entity-event
+    # endpoint as a general application-log destination. Without a Splunk
+    # Platform/Cloud HEC destination, disable SDK log export to prevent normal
+    # Demo logs being sent to /v3/event and rate-limited with HTTP 429.
+    - name: OTEL_LOGS_EXPORTER
+      value: none
+
+opentelemetry-collector:
+  enabled: false
+
+otel-ebpf-profiler:
+  enabled: false
+
+jaeger:
+  enabled: false
+
+prometheus:
+  enabled: false
+
+grafana:
+  enabled: false
+
+opensearch:
+  enabled: false
+
+# The upstream ad service explicitly contains OTEL_LOGS_EXPORTER=otlp. Replace
+# its component env list without that entry so it inherits the single global
+# OTEL_LOGS_EXPORTER=none setting above. Using ad.envOverrides would create a
+# duplicate variable, which Kubernetes server-side apply rejects.
+components:
+  ad:
+    env:
+      - name: AD_PORT
+        value: "8080"
+      - name: AD_PROMETHEUS_PORT
+        value: "9465"
+      - name: FLAGD_HOST
+        value: flagd
+      - name: FLAGD_PORT
+        value: "8013"
+      - name: OTEL_EXPORTER_OTLP_ENDPOINT
+        value: http://$(OTEL_COLLECTOR_NAME):4318
+      - name: OTEL_EXPERIMENTAL_SDK_TELEMETRY_VERSION
+        value: latest
+      - name: OTEL_RESOURCE_ATTRIBUTES_EXTRA
+        value: service.criticality=medium
